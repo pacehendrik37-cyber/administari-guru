@@ -68,7 +68,7 @@ function galat(judul, isi) {
 function muat() {
   siap = false; clearTimeout(timer);
   $('#er').hidden = true; $('#ld').hidden = false;
-  if (!/^https:\/\/script\.google(usercontent)?\.com\/.+\/exec/.test(GAS_URL) || /GANTI_DENGAN/.test(GAS_URL))
+  if (!/^https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbw0QNrXFxzzE9t7qCQ3KUhVXw-RU1x-T9bjBKxnm3mfeGxI3Nb1_Buix7vZt2OqZCdL/exec)
     return galat('Alamat aplikasi belum diatur', 'Buka berkas index.html, lalu ganti nilai GAS_URL dengan URL aplikasi web Apps Script Anda (berakhiran /exec).');
   frame.src = GAS_URL;
   timer = setTimeout(() => { if (!siap) galat('Aplikasi tidak merespons',
