@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ADMIN SD DIGITAL</title>
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Admin SD">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#1e3a8a;font-family:system-ui,"Segoe UI",Roboto,sans-serif}
+#app{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f4f7fc}
+.layer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#fff;background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#f97316 160%)}
+.box{max-width:420px}
+.box h1{margin:12px 0 4px;font-size:1.4rem}.box p{margin:6px 0;opacity:.9;line-height:1.5;font-size:.95rem}
+.logo{width:72px;height:72px;border-radius:18px;box-shadow:0 8px 24px #0005}
+.spin{width:34px;height:34px;margin:18px auto 0;border:4px solid #fff5;border-top-color:#fff;border-radius:50%;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.btn{display:inline-block;margin:10px 4px 0;padding:10px 18px;border:0;border-radius:10px;background:#f97316;color:#fff;font-weight:600;font-size:.95rem;font-family:inherit;text-decoration:none;cursor:pointer}
+.btn.g{background:#ffffff26}
+#ib{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:10px;align-items:center;max-width:calc(100vw - 20px);padding:8px 12px;border-radius:14px;background:#fff;color:#0f172a;font-size:.85rem;box-shadow:0 8px 24px #0004}
+#ib .btn{margin:0;padding:7px 12px;font-size:.85rem}
+#ib .x{border:0;background:none;font-size:1.1rem;cursor:pointer;color:#64748b}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<iframe id="app" title="ADMIN SD DIGITAL" allow="clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+<div id="ld" class="layer"><div class="box">
+  <img class="logo" src="icons/icon-192.png" alt="">
+  <h1>ADMIN SD DIGITAL</h1><p>Memuat aplikasi…</p><div class="spin"></div>
+</div></div>
+
+<div id="er" class="layer" hidden><div class="box">
+  <img class="logo" src="icons/icon-192.png" alt="">
+  <h1 id="ert">Aplikasi belum bisa ditampilkan</h1>
+  <p id="erp"></p>
+  <a class="btn" id="eb" target="_top" rel="noopener">Buka aplikasi langsung</a>
+  <button class="btn g" id="ec" type="button">Coba lagi</button>
+</div></div>
+
+<div id="ib" hidden><span id="ibt">Pasang aplikasi di layar HP atau laptop</span>
+  <button class="btn" id="ibi" type="button">Pasang</button><button class="x" id="ibx" type="button" aria-label="Tutup">&times;</button></div>
+
+<script>
+/* ============ PENGATURAN: ganti alamat di bawah dengan URL aplikasi web (berakhiran /exec) ============ */
+const GAS_URL = 'https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOYMENT/exec';
+const BATAS_DETIK = 20; // waktu tunggu sebelum menampilkan petunjuk jika aplikasi tidak merespons
+/* ======================================================================================================= */
+
+const $ = s => document.querySelector(s);
+const frame = $('#app');
+let siap = false, timer = 0;
+
+function galat(judul, isi) {
+  $('#ld').hidden = true; $('#er').hidden = false;
+  $('#ert').textContent = judul; $('#erp').textContent = isi;
+  $('#eb').href = GAS_URL;
+}
+function muat() {
+  siap = false; clearTimeout(timer);
+  $('#er').hidden = true; $('#ld').hidden = false;
+  if (!/^https:\/\/script\.google(usercontent)?\.com\/.+\/exec/.test(GAS_URL) || /GANTI_DENGAN/.test(GAS_URL))
+    return galat('Alamat aplikasi belum diatur', 'Buka berkas index.html, lalu ganti nilai GAS_URL dengan URL aplikasi web Apps Script Anda (berakhiran /exec).');
+  frame.src = GAS_URL;
+  timer = setTimeout(() => { if (!siap) galat('Aplikasi tidak merespons',
+    'Pastikan deployment memakai versi terbaru, "Siapa yang memiliki akses" diatur ke "Siapa saja", dan Code.gs terbaru (dengan ALLOWALL) sudah di-deploy. Anda juga bisa membuka aplikasi langsung.'); }, BATAS_DETIK * 1000);
+}
+
+/* Aplikasi mengirim sinyal "siap" setelah halaman login/dashboard termuat */
+addEventListener('message', e => {
+  let host = ''; try { host = new URL(e.origin).hostname } catch (x) {}
+  if (!/(^|\.)googleusercontent\.com$/.test(host) && !/(^|\.)script\.google\.com$/.test(host)) return;
+  if (e.data && e.data.adminsd === 'ready') { siap = true; clearTimeout(timer); $('#ld').hidden = true; $('#er').hidden = true; }
+});
+$('#ec').onclick = muat;
+
+/* ---------- Pasang aplikasi (PWA) ---------- */
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const LS = { get: k => { try { return localStorage.getItem(k) } catch (e) { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch (e) {} } };
+let dp = null;
+function tampilBanner(teks, tombol) {
+  if (standalone || LS.get('ib') === '1') return;
+  $('#ibt').textContent = teks; $('#ibi').hidden = !tombol; $('#ib').hidden = false;
+}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); dp = e; tampilBanner('Pasang aplikasi di layar HP atau laptop', true); });
+addEventListener('appinstalled', () => { $('#ib').hidden = true; LS.set('ib', '1'); });
+$('#ibi').onclick = async () => { if (!dp) return; dp.prompt(); await dp.userChoice.catch(() => {}); dp = null; $('#ib').hidden = true; };
+$('#ibx').onclick = () => { $('#ib').hidden = true; LS.set('ib', '1'); };
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !standalone)
+  tampilBanner('Di iPhone/iPad: ketuk Bagikan, lalu "Tambah ke Layar Utama"', false);
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
+muat();
+</script>
+</body>
+</html>
